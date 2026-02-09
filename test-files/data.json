@@ -1,0 +1,9 @@
+{
+  "name": "Test Data",
+  "version": "1.0",
+  "files": [
+    "sample.txt",
+    "data.json"
+  ],
+  "format": "7z"
+}

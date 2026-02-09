@@ -1,0 +1,21 @@
+{
+	"compilerOptions": {
+		"target": "es2020",
+		"lib": ["es2020"],
+		"module": "commonjs",
+		"declaration": false,
+		"outDir": "./dist",
+		"rootDir": ".",
+		"strict": false,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": false,
+		"resolveJsonModule": true,
+		"moduleResolution": "node",
+		"allowSyntheticDefaultImports": true,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true
+	},
+	"include": ["nodes/**/*"],
+	"exclude": ["node_modules/**/*", "dist/**/*", "test*", "gulpfile.js"]
+}

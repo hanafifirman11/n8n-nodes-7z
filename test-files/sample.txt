@@ -1,0 +1,3 @@
+Hello World!
+This is a test file for 7z extraction.
+Testing auto-detection of file types.

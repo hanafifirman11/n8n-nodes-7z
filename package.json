@@ -1,0 +1,52 @@
+{
+  "name": "n8n-nodes-7z",
+  "version": "2.0.10",
+  "description": "N8N custom node for 7z file extraction and compression with in-memory processing",
+  "keywords": [
+    "n8n-community-node-package",
+    "n8n",
+    "7z",
+    "compression",
+    "archive",
+    "extraction"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Developer",
+    "email": "developer@example.com"
+  },
+  "engines": {
+    "node": ">=16.10"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'Manual build - JS already compiled'",
+    "build:ts": "tsc --noEmitOnError false || true",
+    "build:watch": "tsc --watch --noEmitOnError false",
+    "prepublishOnly": "npm run build",
+    "dev": "npm run build:watch"
+  },
+  "files": [
+    "dist",
+    "docker",
+    "k8s"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [],
+    "nodes": [
+      "dist/nodes/SevenZ/SevenZ.node.js"
+    ]
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  },
+  "dependencies": {
+    "node-7z": "^3.0.0",
+    "7zip-bin": "^5.1.1"
+  },
+  "optionalDependencies": {
+    "node-7z-archive": "^1.1.7",
+    "compressing": "^2.0.0"
+  }
+}

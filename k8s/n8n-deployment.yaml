@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n-with-7z
+  labels:
+    app: n8n-with-7z
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: n8n-with-7z
+  template:
+    metadata:
+      labels:
+        app: n8n-with-7z
+    spec:
+      containers:
+      - name: n8n
+        image: n8nio/n8n:latest
+        ports:
+        - containerPort: 5678
+        env:
+        - name: N8N_HOST
+          value: "0.0.0.0"
+        - name: N8N_PORT
+          value: "5678"
+        - name: WEBHOOK_URL
+          value: "https://your-domain.com"
+        volumeMounts:
+        - name: n8n-data
+          mountPath: /data
+        - name: shared-tools
+          mountPath: /usr/local/bin
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      
+      # Sidecar container to provide 7z command
+      - name: tools-provider
+        image: alpine:latest
+        command: 
+        - sh
+        - -c
+        - |
+          apk add --no-cache p7zip
+          cp /usr/bin/7z /shared/
+          echo "7z command installed and ready"
+          sleep infinity
+        volumeMounts:
+        - name: shared-tools
+          mountPath: /shared
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+      
+      volumes:
+      - name: n8n-data
+        persistentVolumeClaim:
+          claimName: n8n-data-pvc
+      - name: shared-tools
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: n8n-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 5678
+    protocol: TCP
+  selector:
+    app: n8n-with-7z
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: n8n-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
