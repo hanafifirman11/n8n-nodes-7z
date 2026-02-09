@@ -20,7 +20,7 @@ export class SevenZ implements INodeType {
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"]}}',
-		description: 'Extract or compress 7z archives in memory',
+		description: 'Extract or compress 7z archives',
 		defaults: {
 			name: '7z Archive',
 		},
@@ -187,7 +187,11 @@ export class SevenZ implements INodeType {
 			try {
 				if (operation === 'extract') {
 					const extractedData = await extractArchive.call(this, i);
-					returnData.push(extractedData);
+					if (Array.isArray(extractedData)) {
+						returnData.push(...extractedData);
+					} else {
+						returnData.push(extractedData);
+					}
 				} else if (operation === 'compress') {
 					const compressedData = await compressFiles.call(this, i);
 					returnData.push(compressedData);
@@ -207,7 +211,10 @@ export class SevenZ implements INodeType {
 	}
 }
 
-async function extractArchive(this: IExecuteFunctions, itemIndex: number): Promise<INodeExecutionData> {
+async function extractArchive(
+	this: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData | INodeExecutionData[]> {
 	const inputPropertyName = this.getNodeParameter('inputDataPropertyName', itemIndex) as string;
 	const outputPropertyName = this.getNodeParameter('outputPropertyName', itemIndex) as string;
 	const outputMode = this.getNodeParameter('outputMode', itemIndex, 'single') as string;
@@ -221,7 +228,7 @@ async function extractArchive(this: IExecuteFunctions, itemIndex: number): Promi
 		throw new Error(`No binary data found in property "${inputPropertyName}"`);
 	}
 
-	const archiveBuffer = Buffer.from(item.binary[inputPropertyName].data, 'base64');
+	const archiveBuffer = await getBinaryBuffer.call(this, itemIndex, inputPropertyName);
 
 	const tempDir = mkdtempSync(join(tmpdir(), '7z-extract-'));
 	const archivePath = join(tempDir, 'archive.7z');
@@ -378,7 +385,7 @@ async function compressFiles(this: IExecuteFunctions, itemIndex: number): Promis
 			let fileData: Buffer;
 
 			if (item.binary && item.binary[dataProperty]) {
-				fileData = Buffer.from(item.binary[dataProperty].data, 'base64');
+				fileData = await getBinaryBuffer.call(this, itemIndex, dataProperty);
 			} else if (item.json && item.json[dataProperty]) {
 				fileData = Buffer.from(item.json[dataProperty] as string, 'utf8');
 			} else {
@@ -487,4 +494,23 @@ function build7zCandidates(customPath?: string): string[] {
 	].filter(Boolean);
 
 	return Array.from(new Set(candidates));
+}
+
+async function getBinaryBuffer(
+	this: IExecuteFunctions,
+	itemIndex: number,
+	propertyName: string,
+): Promise<Buffer> {
+	try {
+		return await this.helpers.getBinaryDataBuffer(itemIndex, propertyName);
+	} catch (error) {
+		const item = this.getInputData()[itemIndex];
+		const binaryData = item.binary?.[propertyName] as { data?: unknown } | undefined;
+		if (typeof binaryData?.data === 'string') {
+			return Buffer.from(binaryData.data, 'base64');
+		}
+		throw new Error(
+			`Unable to read binary data from property "${propertyName}": ${(error as Error).message}`,
+		);
+	}
 }
