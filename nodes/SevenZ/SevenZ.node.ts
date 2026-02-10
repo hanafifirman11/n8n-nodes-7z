@@ -1,9 +1,8 @@
-import {
+import type {
 	IExecuteFunctions,
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
-	NodeOperationError,
 } from 'n8n-workflow';
 
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync, readdirSync, statSync, readFileSync } from 'fs';
@@ -203,7 +202,8 @@ export class SevenZ implements INodeType {
 					});
 					continue;
 				}
-				throw new NodeOperationError(this.getNode(), (error as Error).message, { itemIndex: i });
+				const errorMessage = (error as Error).message ?? String(error);
+				throw new Error(`Item ${i}: ${errorMessage}`);
 			}
 		}
 
